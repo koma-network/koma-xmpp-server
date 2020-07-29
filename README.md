@@ -1,4 +1,4 @@
-# koma-msb-type-A
+# koma-xmpp-server (koma-msb-type-A)
 This script is XMPP Service and implemented in Internet Protocol<br>
 <br/>
 <img src="https://user-images.githubusercontent.com/15040338/87261174-6afdf200-c4df-11ea-84d2-aee2fbe2eee0.JPG" width="75%"></img> 
