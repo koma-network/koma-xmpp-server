@@ -1,0 +1,3 @@
+[submodule "koma-msb"]
+	path = koma-msb
+	url = https://github.com/koma-network/koma-msb
