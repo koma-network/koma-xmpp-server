@@ -31,10 +31,10 @@ Run: <br/>
   $java -jar koma-msb-1.0.1-RELEASE.jar <br/>
 <br/>
 Compatibility : <br/>
+<br/>
 <table>
 <tr><th>Client/Library</th><th>Language</th><th>Platform</th></tr>
 <tr><td>Spark</td><td>Java</td><td>Linux/macOS/Windows</td></tr>
-<tr><td>Pidgin</td><td></td><td>Linux/macOS/Windows</td></tr>
 <tr><td>Smack</td><td>Java</td><td>Linux/macOS/Windows/Android</td></tr>
 </table>
 <br/>
