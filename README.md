@@ -24,7 +24,7 @@ Requirement : <br/>
 4. Check import.sql Deployment <br/>
 5. Check koma-msb Build and Deployment <br/>
 <br/>
-Run: <br/>
+Run : <br/>
 <br/>
   $npm install <br/>
   $npm start <br/>
@@ -34,7 +34,8 @@ Compatibility : <br/>
 <br/>
 <table>
 <tr><th>Client/Library</th><th>Language</th><th>Platform</th></tr>
-<tr><td>Spark</td><td>Java</td><td>Linux/macOS/Windows</td></tr>
-<tr><td>Smack</td><td>Java</td><td>Linux/macOS/Windows/Android</td></tr>
+<tr><td>Spark</td><td>Java</td><td>Linux/Windows</td></tr>
+<tr><td>Xabber</td><td>Java</td><td>Android</td></tr>
+<tr><td>Smack(Library)</td><td>Java</td><td>Linux/macOS/Windows/Android</td></tr>
 </table>
 <br/>
