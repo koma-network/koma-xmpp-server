@@ -32,7 +32,7 @@ Run: <br/>
 <br/>
 Compatibility : <br/>
 <table>
-<th><td>Client/Library</td><td>Language</td><td>Platform</td></th>
+<tr><th>Client/Library</th><th>Language</th><th>Platform</th></tr>
 <tr><td>Spark</td><td>Java</td><td>Linux/macOS/Windows</td></tr>
 <tr><td>Pidgin</td><td></td><td>Linux/macOS/Windows</td></tr>
 <tr><td>Smack</td><td>Java</td><td>Linux/macOS/Windows/Android</td></tr>
