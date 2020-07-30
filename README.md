@@ -1,5 +1,5 @@
 <div class="pagehead">
-  <h2>KOMA Xmpp Server (koma-msb-type-A)</h2>
+  <h2>KOMA Xmpp Server (MSB Type-A)</h2>
   <p>This is the code for XMPP Server, This code is implemented in server side</p>
 </div>
 <div class="box-shadow-medium p-3">
