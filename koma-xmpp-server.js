@@ -2,7 +2,7 @@
  * Copyright   : KOMA-Network (Indonesia IoT Club)
  * Create by   : Yan Yan Purdiansah
  * Create date : 01/06/2020
- * Link        : https://github.com/yypurdi/koma-xmpp-service
+ * Link        : https://github.com/yypurdi/koma-msb-service
  * Description : This is Script for Micro Service Bus with XMPP Service, MQTT Service and HTTP Service
  */
 
@@ -55,7 +55,7 @@ var jsonToXml = new j2xparser(defaultOptions);
 /*
  * Server Configuration
  */
-const domain = 'domain.com';
+const domain = 'koma-network.com';
 const host = '192.168.43.221';
 const port = 5222;
 const port_balancer_router = 6000;
@@ -197,9 +197,8 @@ function randomString(len, charSet) {
 const server = net.createServer();
 server.listen(port,host,function () {    
     
-    var serverInfo = server.address();
-    var serverInfoJson = JSON.stringify(serverInfo);
-    console.log('TCP server listen on address : ' + serverInfoJson); 
+    var serverInfoJson = JSON.stringify(server.address().address+':'+server.address().port);
+    console.log('TCP server listen on address : ' + serverInfoJson);
     
     var connections = {};
     var users = {};
@@ -209,20 +208,19 @@ server.listen(port,host,function () {
 
         let message = data.toString('utf-8');
         let sessionId = message.split(':&:%:#:',1);
-        var msg = message.replace(sessionId+':&:%:#:','');
-        
-        //console.log('OUT->'+msg);
+        var msg = message.replace(sessionId+':&:%:#:','');        
         var jsonObj = JSON.parse(msg);
-        console.log(jsonObj);
+        //console.log(jsonObj);
 
         if(jsonObj.hasOwnProperty('stream:stream')){
             let xml = jsonToXml.parse(jsonObj);
-            xml = xml.replace("</stream:stream>","'>");
+            xml = xml.replace("</stream:stream>","");
             /*
              * Check if the open socket is exist or not
              */
             if(connections[sessionId]!=null){
                 connections[sessionId].write(xml);
+                console.log('Server : ' + sessionId + ' -> stream:stream');
             }
         }
         else if(jsonObj.hasOwnProperty('stream:features')){
@@ -232,6 +230,7 @@ server.listen(port,host,function () {
              */
             if(connections[sessionId]!=null){
                 connections[sessionId].write(xml);
+                console.log('Server : ' + sessionId + ' -> stream:features');
             }
         }
         else{
@@ -266,7 +265,7 @@ server.listen(port,host,function () {
                             let to = jsonObjOut[tag].attr.to;
                             if(sessions.hasOwnProperty(to)){
                                 sessionId = sessions[to];
-                                console.log(tag+" to->"+to);
+                                //console.log('Server : ' + sessionId + ' -> '+to);
                             }
                         }
                     }
@@ -279,6 +278,13 @@ server.listen(port,host,function () {
                 let jsonToXml = new j2xparser(defaultOptions);
                 let xml = jsonToXml.parse(jsonObjOut);
                 connections[sessionId].write(xml);
+                if(tag=='iq'){
+                    let subtag = Object.getOwnPropertyNames(jsonObjOut.iq);
+                    console.log('Server : ' + sessionId + ' -> '+tag+'/'+subtag.slice()[0]);
+                }
+                else{
+                    console.log('Server : ' + sessionId + ' -> '+tag);
+                }
             }
         }
     });
@@ -289,12 +295,10 @@ server.listen(port,host,function () {
         let remote_port = connection.remotePort;
         let sessionId = encrypt(remote_port.toString(),key);
 
-        console.log('Client-'+connection.localAddress+':'+connection.remotePort+'-'+sessionId+' is connected');
-
         connection.setEncoding('utf-8');
         connections[sessionId] = connection;
         
-        connection.on('data', function (data) {            
+        connection.on('data', function (data) {
             /*
              * Receive message and parse from Xml String to Json Object
              */
@@ -302,19 +306,21 @@ server.listen(port,host,function () {
                 if(data.toString().startsWith('<')){
 
                     var jsonObj = xmlToJson.parse(data,options);
-                    //console.log('IN->'+JSON.stringify(jsonObj));
 
                     if(jsonObj.hasOwnProperty('stream:stream'))
                     {
                         eventRequest.emit('data',addAttribute(jsonObj,'stream:stream',sessionId,domain,remote_ip,remote_port));
+                        //console.log('Client : ' + sessionId + ' -> stream:stream');
                     }
                     else if(jsonObj.hasOwnProperty('auth'))
                     {
                         eventRequest.emit('data',addAttribute(jsonObj,'auth',sessionId,domain,remote_ip,remote_port));
+                        console.log('Client : ' + sessionId + ' -> auth');
                     }
                     else if(jsonObj.hasOwnProperty('response'))
                     {                
                         eventRequest.emit('data',addAttribute(jsonObj,'response',sessionId,domain,remote_ip,remote_port));
+                        console.log('Client : ' + sessionId + ' -> response');
                     }
                     else if(jsonObj.hasOwnProperty('iq'))
                     {                        
@@ -323,24 +329,28 @@ server.listen(port,host,function () {
                                 let jsonObjArray = {iq:''};
                                 jsonObjArray.iq = jsonObj.iq[no];
                                 eventRequest.emit('data',addAttribute(jsonObjArray,'iq',sessionId,domain,remote_ip,remote_port));
+                                //console.log('Client : ' + sessionId + ' -> iq');
                             }
                         }
                         else {
                            eventRequest.emit('data',addAttribute(jsonObj,'iq',sessionId,domain,remote_ip,remote_port));
+                           let subtag = Object.getOwnPropertyNames(jsonObj.iq);
+                           //console.log('Client : ' + sessionId + ' -> iq/'+subtag.slice()[1]);
                         }
                     }
                     else if(jsonObj.hasOwnProperty('presence'))
                     {              
-                        console.log(jsonObj);          
                         if(Array.isArray(jsonObj.presence)==true){
                             for(let no in jsonObj.presence){
                                 let jsonObjArray = {presence:''};
                                 jsonObjArray.presence = jsonObj.presence[no];
                                 eventRequest.emit('data',addAttribute(jsonObjArray,'presence',sessionId,domain,remote_ip,remote_port));
+                                console.log('Client : ' + sessionId + ' -> presence');
                             }
                         }
                         else {            
                             eventRequest.emit('data',addAttribute(jsonObj,'presence',sessionId,domain,remote_ip,remote_port));
+                            console.log('Client : ' + sessionId + ' -> presence');
                         }
                     }
                     else if(jsonObj.hasOwnProperty('message'))
@@ -350,10 +360,20 @@ server.listen(port,host,function () {
                                 let jsonObjArray = {message:''};
                                 jsonObjArray.message = jsonObj.message[no];
                                 eventRequest.emit('data',addAttribute(jsonObjArray,'message',sessionId,domain,remote_ip,remote_port));
+                                console.log('Client : ' + sessionId + ' -> message');                                
                             }
                         }
                         else{
                             eventRequest.emit('data',addAttribute(jsonObj,'message',sessionId,domain,remote_ip,remote_port));
+                            if(jsonObj.message.hasOwnProperty('body')){
+                                console.log('Client : ' + jsonObj.message.attr.to + ' -> message');
+                            }else if(jsonObj.message.hasOwnProperty('composing')){
+                                console.log('Client : ' + jsonObj.message.attr.to + ' -> typing');
+                            }else if(jsonObj.message.hasOwnProperty('paused')){
+                                console.log('Client : ' + jsonObj.message.attr.to + ' -> paused');
+                            }else if(jsonObj.message.hasOwnProperty('gone')){
+                                console.log('Client : ' + jsonObj.message.attr.to + ' -> gone');
+                            }                                
                         }
                     }
                     else{
@@ -361,7 +381,7 @@ server.listen(port,host,function () {
                     }        
                 }
                 else{
-                    console.log('Data is not defined as XMPP protocol');
+                    console.log('Client : ' + sessionId + ' -> data is not defined as XMPP protocol');
                     connection.end();
                     connections[sessionId] = null;    
                 }
@@ -378,11 +398,11 @@ server.listen(port,host,function () {
             let packetId = prefixId + counter;
             jsonObj = {presence:{attr:{id:packetId,type:'unavailable'}}};
             eventRequest.emit('data',addAttribute(jsonObj,'presence',sessionId,domain,remote_ip,remote_port));
-            console.log('Client-'+remote_ip+':'+remote_port+'-'+sessionId+' is disconnected');
+            console.log('Client : ' + sessionId + ' -> disconnected');
         });
 
         connection.on('timeout', function () {
-            console.log('User request time out. ');
+            console.log('Client : ' + sessionId + ' -> timeout');
         });
 
         connection.on('error', function (error) {
@@ -392,19 +412,19 @@ server.listen(port,host,function () {
                 let packetId = prefixId + counter;
                 jsonObj = {presence:{attr:{id:packetId,type:'unavailable'}}};    
                 eventRequest.emit('data',addAttribute(jsonObj,'presence',sessionId,domain,remote_ip,remote_port));
-                console.log('Client-'+remote_ip+':'+remote_port+'-'+sessionId+' is disconnected');                    
+                console.log('Client : ' + sessionId + ' -> disconnected');
             }else{
                 if(connection.destroyed!=true)
-                    console.error("Connection Error:"+error.message);
+                    console.log('Client : ' + sessionId + ' -> error'+error.message);
             }
         });
     });
 
     server.on('close', function () {
-        console.log('TCP server socket is closed.');
+        console.log('Client : ' + sessionId + ' -> socket is closed');
     });
 
     server.on('error', function (error) {
-        console.error(JSON.stringify(error));
+        console.log('Client : ' + sessionId + ' -> error'+error.message);
     });
 });
